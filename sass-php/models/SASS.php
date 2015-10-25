@@ -64,7 +64,11 @@
 					}
 				}
 			}
-
+			if(isset($options['query_skills'])){
+				$skillIds 				= array_keys(get_object_vars($options['query_skills']->data));
+				$skillIds 				= implode(", ", $skillIds);
+				$conditionString .= sprintf("AND skill_dimension.skill_tree_id IN (%s)", $skillIds);
+			}
 			if(isset($options['order']) && !empty($options['order'])){
 				$order = array();
 				foreach($options['order'] as $table => $fields){
@@ -86,11 +90,11 @@
 			$select = sprintf('SELECT fact.id as `fact|id`, fact.name%1$s as `fact|name`, fact.sub_type as `fact|slot`,
 			 armor_dimension.id as `armor_dimension|id`, armor_dimension.slot as `armor_dimension|slot`, armor_dimension.defense as `armor_dimension|defense`, armor_dimension.max_defense as `armor_dimension|max_defense`, armor_dimension.fire_res as `armor_dimension|fire_res`, armor_dimension.thunder_res as `armor_dimension|thunder_res`, armor_dimension.dragon_res as `armor_dimension|dragon_res`, armor_dimension.water_res as `armor_dimension|water_res`, armor_dimension.ice_res as `armor_dimension|ice_res`, armor_dimension.gender as `armor_dimension|gender`, armor_dimension.hunter_type as `armor_dimension|hunter_type`, armor_dimension.num_slots as `armor_dimension|num_slots`,
 			 skill_tree_dimension.skill_tree_id as `skill_tree_dimension|skill_tree_id`, skill_tree_dimension.point_value as `skill_tree_dimension|point_value`, skill_dimension.name%1$s as `skill_dimension|name`, skill_dimension.required_skill_tree_points as `skill_dimension|required_skill_tree_points`
-			 FROM items as fact ', (Config::$locale === 'eng') ? '' : '_' . Config::$locale);
+			 FROM items as fact ', $this->_getLocaleSuffix());
 
 			$selectString = $this->_buildJoins($select, $options['joins']);
-			echo $selectString . $conditionString;
-			$armors = $this->database->getDbConnection()->query($selectString . $conditionString);
+			// echo $selectString . $conditionString;
+			$armors = $this->_queryDb($selectString . $conditionString);
 			return $this->_prepareArmors($armors);
 		}
 
@@ -117,10 +121,13 @@
 
 							if(isset($result['skill_dimension|name'])){
 								$value_hash = $this->_hashKey($result['skill_dimension|name']);
-								if(!isset($obj->data->$hash->skill_tree_dimension->$value->$value_hash)){
-									$obj->data->$hash->skill_tree_dimension->$value->$value_hash = new stdClass();
-									$obj->data->$hash->skill_tree_dimension->$value->$value_hash->name = $result['skill_dimension|name'];
-									$obj->data->$hash->skill_tree_dimension->$value->$value_hash->required_skill_tree_points = $result['skill_dimension|required_skill_tree_points'];
+								if(!isset($obj->data->$hash->skill_tree_dimension->$value->skills)){
+									$obj->data->$hash->skill_tree_dimension->$value->skills = new stdClass();
+								}
+								if(!isset($obj->data->$hash->skill_tree_dimension->$value->skills->$value_hash)){
+									$obj->data->$hash->skill_tree_dimension->$value->skills->$value_hash = new stdClass();
+									$obj->data->$hash->skill_tree_dimension->$value->skills->$value_hash->name = $result['skill_dimension|name'];
+									$obj->data->$hash->skill_tree_dimension->$value->skills->$value_hash->required_skill_tree_points = $result['skill_dimension|required_skill_tree_points'];
 								}
 							}
 						}
@@ -143,11 +150,12 @@
 							} else if($table === 'skill_dimension'){
 								$value_hash = $this->_hashKey($value);
 								if($field === 'name' && !isset($data->skill_tree_dimension->$skillId->$value_hash)){
-									$data->skill_tree_dimension->$skillId->$value_hash = new stdClass();
-									$data->skill_tree_dimension->$skillId->$value_hash->name = $value;
-									$skillName = $value_hash;
-								} else if(isset($data->skill_tree_dimension->$skillId->$skillName)){
-									$data->skill_tree_dimension->$skillId->$skillName->required_skill_tree_points = $value;
+									$data->skill_tree_dimension->$skillId->skills                    = new stdClass();
+									$data->skill_tree_dimension->$skillId->skills->$value_hash       = new stdClass();
+									$data->skill_tree_dimension->$skillId->skills->$value_hash->name = $value;
+									$skillName                                                       = $value_hash;
+								} else if(isset($data->skill_tree_dimension->$skillId->skills->$skillName)){
+									$data->skill_tree_dimension->$skillId->skills->$skillName->required_skill_tree_points = $value;
 								} else {
 									var_dump($result); var_dump($obj); die('Error! unpacking potential skill for item');
 								}
@@ -159,6 +167,34 @@
 						$obj->data->$hash = $data;
 						$obj->count++;
 					}
+				}
+			}
+			return $obj;
+		}
+
+		function getSkillIdByName($names){
+			$names[] = 'Torso Up';
+			$conditions = (is_array($names)) ? (sprintf('WHERE skill_dimension.name%s IN ("%s") ', $this->_getLocaleSuffix(), implode('", "', $names))) : sprinf('WHERE skill_dimension.name%s = %s ', $this->_getLocaleSuffix(), $names);
+
+			$query = sprintf('SELECT skill_dimension.name%s as name, skill_dimension.skill_tree_id as id, skill_dimension.required_skill_tree_points as required FROM skill_tree_skills as skill_dimension %s', $this->_getLocaleSuffix(), $conditions);
+
+			$skillIds = $this->_queryDb($query);
+			return $this->_prepareSkillIdByName($skillIds);
+		}
+
+		private function _prepareSkillIdByName($results){
+			$obj = new stdClass();
+			$obj->data = new stdClass();
+			$obj->count = 0;
+			if($results){
+				$num_rows = $results->num_rows;
+				$obj->count = $num_rows;
+				for($i = 0; $i < $num_rows; $i++){
+					$result                             = $results->fetch_assoc();
+					$obj->data->$result['id']           = new stdClass();
+					$obj->data->$result['id']->id       = $result['id'];
+					$obj->data->$result['id']->name     = $result['name'];
+					$obj->data->$result['id']->required = $result['required'];
 				}
 			}
 			return $obj;
@@ -176,6 +212,14 @@
 
 		private function _getJoinTables(){
 			return $this->joinTables;
+		}
+
+		private function _getLocaleSuffix(){
+			return (Config::$locale === 'eng') ? '' : '_' . Config::$locale;
+		}
+
+		private function _queryDb($query){
+			return $this->database->getDbConnection()->query($query);
 		}
 
 		private function _hashKey($value){

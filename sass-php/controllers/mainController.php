@@ -1,11 +1,20 @@
 <?php
 	require_once(dirname(dirname(__FILE__)) . DIRECTORY_SEPARATOR . 'Dispatcher.php');
 	require_once(dirname(dirname(__FILE__)) . DIRECTORY_SEPARATOR . 'Slim-2.x/Slim/Slim.php');
+	require_once(dirname(__FILE__) . DIRECTORY_SEPARATOR . 'Combinations.php');
 	\Slim\Slim::registerAutoloader();
 
-	$myDispatch = new Dispatcher();
-	$app = new \Slim\Slim();
-	$app->get('/invoke/:action/:options', function ($action, $options) use($myDispatch){
+	$combine = new Combinations();
+	$myDispatch    = new Dispatcher();
+	$app           = new \Slim\Slim();
+	$app->get('/invoke/:action/:options', function ($action, $options) use($myDispatch, $combine){
+		$armor_slots = array(
+			'head',
+			'body',
+			'arms',
+			'waist',
+			'legs'
+		);
 		$options = json_decode($options, true);
 		$options['joins'] = array(
 			'armor_dimension',
@@ -13,40 +22,33 @@
 			'skill_dimension'
 		);
 		$options['rarity'] = 8;
-		$options['piece'] = 'head';
 		$options['classType'] = 'blade';
 		$options['order'] = array(
-				'armor_dimension' => array(
-					'max_defense',
-					'num_slots'
-				)
-			);
-		$armors = $myDispatch->invokeCall($action, $options);
+			'armor_dimension' => array(
+				'max_defense',
+				'num_slots'
+			)
+		);
+		$armorList = new SplFixedArray(7);
+		$options['query_skills'] = array(
+			'Bio Researcher',
+			'Mind\'s Eye',
+			'Attack Up (S)'
+		);
+		$skillIds = $myDispatch->invokeCall('getSkillIdByName', $options['query_skills']);
+		$options['query_skills'] = json_decode($skillIds);
+		for($i = 0; $i < count($armor_slots); $i++){
+			$options['piece'] = $armor_slots[$i];
+			$armors = $myDispatch->invokeCall($action, $options);
+			$armorList[$i] = $armors;
+		}
+		// var_dump($skillIds); die();
 		// var_dump($armors);
-		if($armors){
-			$armors = json_decode($armors);
-			var_dump($armors);
+		if(!empty($armorList)){
+			$combine->gattai($armorList, $skillIds);
 		}
 	});
 
 	$app->run();
 
-
-	// $dispatch = new Dispatcher();
-	// $options = array(
-	// 	'rarity'    => 8,
-	// 	'classType' => 'blade',
-	// 	'piece'     => 'head',
-	// 	'order'     => array(
-	// 		'armor_dimension' => array(
-	// 			'max_defense',
-	// 			'num_slots'
-	// 		)
-	// 	)
-	// );
-	// $armors = $dispatch->invokeCall('getArmors', $options);
-	// // echo $armors->num_rows;
-	// if($armors){
-	// 	var_dump(json_decode($armors->getResult()), true);
-	// }
 ?>
