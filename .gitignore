@@ -8,3 +8,7 @@ dist
 *.egg-info
 _mailinglist
 .tox
+sass-php/config.php
+sass-php/credentials.csv
+sass-php/credentials2.csv
+sass-php/test.sql

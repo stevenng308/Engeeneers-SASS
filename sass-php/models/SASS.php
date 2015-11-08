@@ -68,6 +68,16 @@
 				$skillIds 				= array_keys(get_object_vars($options['query_skills']->data));
 				$skillIds 				= implode(", ", $skillIds);
 				$conditionString .= sprintf("AND skill_dimension.skill_tree_id IN (%s)", $skillIds);
+				$conditionString .= "AND skill_tree_dimension.point_value >= 1";
+			}
+			if(isset($options['group']) && !empty($options['group'])){
+				$group = array();
+				foreach($options['group'] as $table => $fields){
+					foreach($fields as $field){
+						$group[] = $table . '.' . $field;
+					}
+				}
+				$conditionString .= ' GROUP BY ' . implode(', ', $group);
 			}
 			if(isset($options['order']) && !empty($options['order'])){
 				$order = array();
@@ -80,13 +90,6 @@
 				$conditionString .= ' ORDER BY ' . implode(', ', $order);
 			}
 
-			if(isset($options['group']) && !empty($options['group'])){
-				$group = array();
-				foreach($options['group'] as $field){
-					$group[] = $field;
-				}
-				$conditionString .= ' GROUP BY ' . implode(', ', $group);
-			}
 			$select = sprintf('SELECT fact.id as `fact|id`, fact.name%1$s as `fact|name`, fact.sub_type as `fact|slot`,
 			 armor_dimension.id as `armor_dimension|id`, armor_dimension.slot as `armor_dimension|slot`, armor_dimension.defense as `armor_dimension|defense`, armor_dimension.max_defense as `armor_dimension|max_defense`, armor_dimension.fire_res as `armor_dimension|fire_res`, armor_dimension.thunder_res as `armor_dimension|thunder_res`, armor_dimension.dragon_res as `armor_dimension|dragon_res`, armor_dimension.water_res as `armor_dimension|water_res`, armor_dimension.ice_res as `armor_dimension|ice_res`, armor_dimension.gender as `armor_dimension|gender`, armor_dimension.hunter_type as `armor_dimension|hunter_type`, armor_dimension.num_slots as `armor_dimension|num_slots`,
 			 skill_tree_dimension.skill_tree_id as `skill_tree_dimension|skill_tree_id`, skill_tree_dimension.point_value as `skill_tree_dimension|point_value`, skill_dimension.name%1$s as `skill_dimension|name`, skill_dimension.required_skill_tree_points as `skill_dimension|required_skill_tree_points`
@@ -173,7 +176,6 @@
 		}
 
 		function getSkillIdByName($names){
-			$names[] = 'Torso Up';
 			$conditions = (is_array($names)) ? (sprintf('WHERE skill_dimension.name%s IN ("%s") ', $this->_getLocaleSuffix(), implode('", "', $names))) : sprinf('WHERE skill_dimension.name%s = %s ', $this->_getLocaleSuffix(), $names);
 
 			$query = sprintf('SELECT skill_dimension.name%s as name, skill_dimension.skill_tree_id as id, skill_dimension.required_skill_tree_points as required FROM skill_tree_skills as skill_dimension %s', $this->_getLocaleSuffix(), $conditions);
@@ -200,6 +202,41 @@
 			return $obj;
 		}
 
+		function getSkillDecorations($options){
+			$select  = sprintf('SELECT fact.id as `fact|id`, fact.name%1$s as `fact|name`,
+									decoration_dimension.num_slots as `decoration_dimension|num_slots`,
+									skill_tree_dimension.skill_tree_id as `skill_tree_dimension|skill_tree_id`, skill_tree_dimension.point_value as `skill_tree_dimension|point_value`
+									FROM items as fact ', $this->_getLocaleSuffix());
+			$skillIds         = array_keys(get_object_vars($options['query_skills']->data));
+			$skillIds         = implode(", ", $skillIds);
+			$conditionString  = sprintf("AND skill_tree_dimension.skill_tree_id IN (%s)", $skillIds);
+			$conditionString .= "AND skill_tree_dimension.point_value >= 1 ";
+			$conditionString .= "ORDER BY decoration_dimension.num_slots DESC, skill_tree_dimension.point_value DESC ";
+			$selectString     = $this->_buildJoins($select, $options['joins']);
+			$decorations      = $this->_queryDb($selectString . $conditionString);
+			return $this->_prepareDecorations($decorations);
+		}
+
+		private function _prepareDecorations($results){
+			$decorations = array('data' => array());
+			if($results){
+				$num_rows = $results->num_rows;
+				for($i = 0; $i < $num_rows; $i++){
+					$result = $results->fetch_assoc();
+					$decorations['data'][$result['skill_tree_dimension|skill_tree_id']][] = array(
+						'skill_tree_id' => $result['skill_tree_dimension|skill_tree_id'],
+						'name'          => $result['fact|name'],
+						'num_slots'     => $result['decoration_dimension|num_slots'],
+						'point_value'   => $result['skill_tree_dimension|point_value']
+					);
+					if($result['skill_tree_dimension|point_value'] > $result['decoration_dimension|num_slots']){
+						$old_val = (isset($decorations['data'][$result['skill_tree_dimension|skill_tree_id']]['slot_weights'][$result['decoration_dimension|num_slots']])) ? $decorations['data'][$result['skill_tree_dimension|skill_tree_id']]['slot_weights'][$result['decoration_dimension|num_slots']] : 0;
+						$decorations['data'][$result['skill_tree_dimension|skill_tree_id']]['slot_weights'][$result['decoration_dimension|num_slots']] =  max($old_val, ($result['skill_tree_dimension|point_value'] - $result['decoration_dimension|num_slots']));
+					}
+				}
+			}
+			return $decorations;
+		}
 		private function _buildJoins($query, $alias){
 			$tables = $this->_getJoinTables();
 			// var_dump($tables); die();

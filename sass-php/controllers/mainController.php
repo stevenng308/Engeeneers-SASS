@@ -23,18 +23,29 @@
 		);
 		$options['rarity'] = 8;
 		$options['classType'] = 'blade';
-		$options['order'] = array(
-			'armor_dimension' => array(
-				'max_defense',
-				'num_slots'
+		$options['group'] = array(
+			'skill_tree_dimension' => array(
+				'skill_tree_id'
+			),
+			'fact' => array(
+				'name'
 			)
 		);
-		$armorList = new SplFixedArray(7);
+		$options['order'] = array(
+			'skill_tree_dimension' => array(
+				'point_value DESC'
+			),
+			'armor_dimension' => array(
+				'max_defense DESC',
+				'num_slots DESC'
+			)
+		);
 		$options['query_skills'] = array(
 			'Bio Researcher',
 			'Mind\'s Eye',
 			'Attack Up (S)'
 		);
+		$armorList = new SplFixedArray(7);
 		$skillIds = $myDispatch->invokeCall('getSkillIdByName', $options['query_skills']);
 		$options['query_skills'] = json_decode($skillIds);
 		for($i = 0; $i < count($armor_slots); $i++){
@@ -42,10 +53,19 @@
 			$armors = $myDispatch->invokeCall($action, $options);
 			$armorList[$i] = $armors;
 		}
-		// var_dump($skillIds); die();
+		$options = array(
+			'query_skills' => $options['query_skills'],
+			'joins' => array(
+				'skill_tree_dimension',
+				'decoration_dimension'
+			)
+		);
+		$decorations = $myDispatch->invokeCall('getSkillDecorations', $options);
+		// var_dump($skillIds);
 		// var_dump($armors);
+		// var_dump($decorations); exit;
 		if(!empty($armorList)){
-			$combine->gattai($armorList, $skillIds);
+			$combine->gattai($armorList, $skillIds, $decorations);
 		}
 	});
 
