@@ -4,9 +4,10 @@
 	require_once(dirname(__FILE__) . DIRECTORY_SEPARATOR . 'Combinations.php');
 	\Slim\Slim::registerAutoloader();
 
-	$combine = new Combinations();
-	$myDispatch    = new Dispatcher();
-	$app           = new \Slim\Slim();
+	$combine 		= new Combinations();
+	$myDispatch = new Dispatcher();
+	$app        = new \Slim\Slim();
+
 	$app->get('/invoke/:action/:options', function ($action, $options) use($myDispatch, $combine){
 		$armor_slots = array(
 			'head',
@@ -61,11 +62,12 @@
 			)
 		);
 		$decorations = $myDispatch->invokeCall('getSkillDecorations', $options);
+		$options['weapon'] = 2;
 		// var_dump($skillIds);
 		// var_dump($armors);
 		// var_dump($decorations); exit;
 		if(!empty($armorList)){
-			$combine->gattai($armorList, $skillIds, $decorations);
+			$combine->gattai($options['weapon'], $armorList, $skillIds, $decorations);
 		}
 	});
 

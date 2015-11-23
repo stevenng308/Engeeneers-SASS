@@ -175,6 +175,31 @@
 			return $obj;
 		}
 
+		function getSkills(){
+			$query = sprintf('SELECT skill_dimension.name%s as name, skill_dimension.skill_tree_id as id FROM skill_tree_skills as skill_dimension', $this->_getLocaleSuffix());
+			$conditions = " WHERE skill_dimension.id != 1";
+			$skills = $this->_queryDb($query . $conditions);
+			return $this->_prepareSkills($skills);
+		}
+
+		private function _prepareSkills($results){
+			$obj = new stdClass();
+			$obj->data = new stdClass();
+			$obj->count = 0;
+			if($results){
+				$num_rows = $results->num_rows;
+				$obj->count = $num_rows;
+				for($i = 0; $i < $num_rows; $i++){
+          $result                 = $results->fetch_assoc();
+          $hash                   = $this->_hashKey($result['name']);
+          $obj->data->$hash       = new stdClass();
+          $obj->data->$hash->id   = $result['id'];;
+          $obj->data->$hash->name = $result['name'];
+				}
+			}
+			return $obj;
+		}
+
 		function getSkillIdByName($names){
 			$conditions = (is_array($names)) ? (sprintf('WHERE skill_dimension.name%s IN ("%s") ', $this->_getLocaleSuffix(), implode('", "', $names))) : sprinf('WHERE skill_dimension.name%s = %s ', $this->_getLocaleSuffix(), $names);
 
