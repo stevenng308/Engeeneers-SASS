@@ -17,50 +17,65 @@
 
     <!-- Bootstrap CSS -->
 		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
-    <link rel="stylesheet" href="assets/dist/css/bootstrap.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" integrity="sha512-dTfge/zgoMYpP7QbHy4gWMEGsbsdZeCXz7irItjcC3sPUFtf0kuFbDz/ixG7ArTxmDjLXDmezHubeNikyKGVyQ==" crossorigin="anonymous">
 		<link rel="stylesheet" href="assets/dist/css/sticky-footer-nav.css">
 		<link rel="stylesheet" href="assets/dist/css/typeahead.css">
   </head>
   <body>
 		<!-- Fixed navbar -->
-    <nav class="navbar navbar-default navbar-fixed-top">
+    <nav class="navbar navbar-default navbar-static-top">
       <div class="container">
         <div class="navbar-header">
-          <a class="navbar-brand" href="#">SASS - SUPER Armor Set Search</a>
+          <h1>MH4U SASS - Monster Hunter 4 Ult. SUPER Armor Set Search</h1>
         </div>
       </div>
     </nav>
 
 		<!-- Begin page content -->
-    <div class="container">
+    <div class="container" srtle="min-width: 518px">
 			<div class="row">
-			  <div class="col-xs-12 col-sm-6 col-md-8">
+			  <div class="col-xs-7 col-sm-7 col-md-7">
 					<!-- Split button -->
 					<div class="btn-group">
-					  <button id="hunter_type_label" type="button" class="btn btn-primary">Hunter Type</button>
+					  <button id="hunter_type_label" type="button" class="btn btn-primary filter_label">Hunter Type</button>
 					  <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
 					    <span class="caret"></span>
 					    <span class="sr-only">Toggle Dropdown</span>
 					  </button>
 					  <ul class="dropdown-menu">
-					    <li><a href="#">Blademaster</a></li>
-					    <li><a href="#">Gunner</a></li>
+					    <li><a class="hunter_type" href="#">Blademaster</a></li>
+					    <li><a class="hunter_type" href="#">Gunner</a></li>
 					  </ul>
 					</div>
 					<!-- Split button -->
 					<div class="btn-group">
-					  <button id="hunter_type_label" type="button" class="btn btn-primary">Armor Rarity</button>
+					  <button id="armor_level_label" type="button" class="btn btn-primary filter_label">Armor Rarity</button>
 					  <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
 					    <span class="caret"></span>
 					    <span class="sr-only">Toggle Dropdown</span>
 					  </button>
 					  <ul class="dropdown-menu">
-					    <li><a href="#">10<i class="fa fa-star"></i> & Below</a></li>
-					    <li><a href="#">9<i class="fa fa-star" aria-hidden="true"></i> & Below</a></li>
-							<li><a href="#">8<i class="fa fa-star" aria-hidden="true"></i> & Below</a></li>
-							<li><a href="#">7<i class="fa fa-star" aria-hidden="true"></i> & Below</a></li>
+					    <li><a class="armor_rarity" href="#">10<i class="fa fa-star"></i> Only</a></li>
+					    <li><a class="armor_rarity" href="#">9<i class="fa fa-star"></i> & Above</a></li>
+							<li><a class="armor_rarity" href="#">8<i class="fa fa-star"></i> & Above</a></li>
+							<li><a class="armor_rarity" href="#">7<i class="fa fa-star"></i> & Above</a></li>
 					  </ul>
 					</div>
+					<!-- Split button -->
+					<div class="btn-group">
+					  <button id="weapon_slot_label" type="button" class="btn btn-primary filter_label">Weapon Slots</button>
+					  <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+					    <span class="caret"></span>
+					    <span class="sr-only">Toggle Dropdown</span>
+					  </button>
+					  <ul class="dropdown-menu">
+					    <li><a class="weapon" href="#">OOO</a></li>
+					    <li><a class="weapon" href="#">OO-</a></li>
+							<li><a class="weapon" href="#">O--</a></li>
+							<li><a class="weapon" href="#">None</a></li>
+					  </ul>
+					</div>
+					<button class="btn btn-danger" style="margin-left: 5%;">Reset</button>
 					<div id="skill_selection" style="display: block; padding: 3% 0;">
 						<input class="typeahead" type="text" placeholder="Skill 1">
 						<input class="typeahead" type="text" placeholder="Skill 2">
@@ -68,8 +83,45 @@
 						<input class="typeahead" type="text" placeholder="Skill 4">
 						<input class="typeahead" type="text" placeholder="Skill 5">
 					</div>
+					<div id="submit_container" style="width: 405px;">
+						<button type="button" class="btn btn-primary btn-lg btn-block">Search</button>
+					</div>
 				</div>
-			  <div class="col-xs-6 col-md-4">.col-xs-6 .col-md-4</div>
+			  <div class="col-xs-5 col-sm-5 col-md-5" style="min-height: 458px; max-height: 730px; overflow-y: auto;">
+					<h2 style="margin-top: 0px;">Search Results</h2>
+					<div style="min-height: 408px">
+						<div id="results_container">
+							<!--<h4>0 results found</h4>-->
+							<div id="search_results">
+								<div class="panel panel-primary">
+									<div class="panel-heading">
+										<h3 class="panel-title"> Result 1</h3>
+									</div>
+									<div class="panel-body">
+										<table class="table table-condensed">
+											<thead>
+												<th>Type</th>
+												<th>Name</th>
+											</thead>
+											<tbody class="armor_list">
+											</tbody>
+											<thead>
+												<th colspan=2>Decorations</th>
+											</thead>
+											<tbody class="decor_list">
+											</tbody>
+										</table>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div class="progress" style="margin-top:2%;">
+						  <div class="progress-bar progress-bar-success progress-bar-striped active" role="progressbar" aria-valuenow="45" aria-valuemin="0" aria-valuemax="100" style="width: 45%;">
+						    <span class="sr-only">45% Complete</span>
+						  </div>
+						</div>
+					</div>
+				</div>
 			</div>
     </div>
 
@@ -79,6 +131,31 @@
       </div>
     </footer>
 
+		<div id="result_template" style="display: none;">
+			<div class="search_results">
+				<div class="panel panel-primary">
+					<div class="panel-heading">
+						<h3 class="panel-title"></h3>
+					</div>
+					<div class="panel-body">
+						<table class="table table-condensed">
+							<thead>
+								<th>Type</th>
+								<th>Name</th>
+							</thead>
+							<tbody class="armor_list">
+							</tbody>
+							<thead>
+								<th>Decoration</th>
+								<th>Amount</th>
+							</thead>
+							<tbody class="decor_list">
+							</tbody>
+						</table>
+					</div>
+				</div>
+			</div>
+		</div>
     <!-- jQuery first, then Bootstrap JS. -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
     <script src="assets/dist/js/bootstrap.min.js"></script>

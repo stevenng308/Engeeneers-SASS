@@ -27,7 +27,7 @@
 			// echo $gloveArmors->count . " \n";
 			// echo $waistArmors->count . " \n";
 			// echo $legArmors->count . " \n"; exit;
-			var_dump($skills->data);
+			// var_dump($skills->data);
 			$skill_map = array_keys(get_object_vars($skills->data));
 			$weights = array('3' => 0, '2' => 0, '1' => 0);
 			foreach($skill_map as $skill){
@@ -125,7 +125,8 @@
 				} //end body
 
 			} //end head
-			var_dump($foundArmors); exit;
+			// var_dump($foundArmors); exit;
+			return $foundArmors;
 		}
 
 		private function _checkSkillTotals($skills, $results, $type){
