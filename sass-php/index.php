@@ -43,8 +43,8 @@
 					    <span class="sr-only">Toggle Dropdown</span>
 					  </button>
 					  <ul class="dropdown-menu">
-					    <li><a class="hunter_type" href="#">Blademaster</a></li>
-					    <li><a class="hunter_type" href="#">Gunner</a></li>
+					    <li><a class="hunter_type" href="#" data-value="blade">Blademaster</a></li>
+					    <li><a class="hunter_type" href="#" data-value="gunner">Gunner</a></li>
 					  </ul>
 					</div>
 					<!-- Split button -->
@@ -55,10 +55,10 @@
 					    <span class="sr-only">Toggle Dropdown</span>
 					  </button>
 					  <ul class="dropdown-menu">
-					    <li><a class="armor_rarity" href="#">10<i class="fa fa-star"></i> Only</a></li>
-					    <li><a class="armor_rarity" href="#">9<i class="fa fa-star"></i> & Above</a></li>
-							<li><a class="armor_rarity" href="#">8<i class="fa fa-star"></i> & Above</a></li>
-							<li><a class="armor_rarity" href="#">7<i class="fa fa-star"></i> & Above</a></li>
+					    <li><a class="armor_rarity" href="#" data-value="10">10<i class="fa fa-star" style="font-size: 0.97rem;"></i> Only</a></li>
+					    <li><a class="armor_rarity" href="#" data-value="9">9<i class="fa fa-star" style="font-size: 0.97rem;"></i> & Above</a></li>
+							<li><a class="armor_rarity" href="#" data-value="8">8<i class="fa fa-star" style="font-size: 0.97rem;"></i> & Above</a></li>
+							<li><a class="armor_rarity" href="#" data-value="7">7<i class="fa fa-star" style="font-size: 0.97rem;"></i> & Above</a></li>
 					  </ul>
 					</div>
 					<!-- Split button -->
@@ -69,10 +69,10 @@
 					    <span class="sr-only">Toggle Dropdown</span>
 					  </button>
 					  <ul class="dropdown-menu">
-					    <li><a class="weapon" href="#">OOO</a></li>
-					    <li><a class="weapon" href="#">OO-</a></li>
-							<li><a class="weapon" href="#">O--</a></li>
-							<li><a class="weapon" href="#">None</a></li>
+					    <li><a class="weapon" href="#" data-value="3">OOO</a></li>
+					    <li><a class="weapon" href="#" data-value="2">OO-</a></li>
+							<li><a class="weapon" href="#" data-value="1">O--</a></li>
+							<li><a class="weapon" href="#" data-value="0">None</a></li>
 					  </ul>
 					</div>
 					<button class="btn btn-danger" style="margin-left: 5%;">Reset</button>

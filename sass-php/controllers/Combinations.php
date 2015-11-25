@@ -249,8 +249,10 @@
 				}
 				$leg = $leg->fact->name;
 			}
-			$num_slots['possible'] += $this->weapon;
-			$num_slots[$this->weapon] += 1;
+			if($this->weapon > 0){
+				$num_slots['possible'] += $this->weapon;
+				$num_slots[$this->weapon] += 1;
+			}
 			$num_slots = $this->_addAltSlots($num_slots, $this->weapon);
 			return array($head, $body, $glove, $waist, $leg, 'num_slots' => $num_slots, 'incomplete' => $incomplete);
 		}

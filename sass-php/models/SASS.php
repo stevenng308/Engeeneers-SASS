@@ -176,7 +176,7 @@
 		}
 
 		function getSkills(){
-			$query = sprintf('SELECT skill_dimension.name%s as name, skill_dimension.skill_tree_id as id FROM skill_tree_skills as skill_dimension', $this->_getLocaleSuffix());
+			$query = sprintf('SELECT skill_dimension.name%s as name, skill_dimension.skill_tree_id as skill_id, skill_dimension.id as id FROM skill_tree_skills as skill_dimension', $this->_getLocaleSuffix());
 			$conditions = " WHERE skill_dimension.id != 1";
 			$skills = $this->_queryDb($query . $conditions);
 			return $this->_prepareSkills($skills);
@@ -190,26 +190,27 @@
 				$num_rows = $results->num_rows;
 				$obj->count = $num_rows;
 				for($i = 0; $i < $num_rows; $i++){
-          $result                 = $results->fetch_assoc();
-          $hash                   = $this->_hashKey($result['name']);
-          $obj->data->$hash       = new stdClass();
-          $obj->data->$hash->id   = $result['id'];;
-          $obj->data->$hash->name = $result['name'];
+          $result                     = $results->fetch_assoc();
+          $hash                       = $this->_hashKey($result['name']);
+          $obj->data->$hash           = new stdClass();
+          $obj->data->$hash->id       = $result['id'];
+          $obj->data->$hash->skill_id = $result['skill_id'];
+          $obj->data->$hash->name     = $result['name'];
 				}
 			}
 			return $obj;
 		}
 
 		function getSkillIdByName($names){
-			$conditions = (is_array($names)) ? (sprintf('WHERE skill_dimension.name%s IN ("%s") ', $this->_getLocaleSuffix(), implode('", "', $names))) : sprinf('WHERE skill_dimension.name%s = %s ', $this->_getLocaleSuffix(), $names);
+			$conditions = (is_array($names)) ? (sprintf('WHERE skill_dimension.name%s IN ("%s") ', $this->_getLocaleSuffix(), implode('", "', $names))) : sprintf('WHERE skill_dimension.name%s = %s ', $this->_getLocaleSuffix(), $names);
 
 			$query = sprintf('SELECT skill_dimension.name%s as name, skill_dimension.skill_tree_id as id, skill_dimension.required_skill_tree_points as required FROM skill_tree_skills as skill_dimension %s', $this->_getLocaleSuffix(), $conditions);
 
 			$skillIds = $this->_queryDb($query);
-			return $this->_prepareSkillIdByName($skillIds);
+			return $this->_prepareSkillIds($skillIds);
 		}
 
-		private function _prepareSkillIdByName($results){
+		private function _prepareSkillIds($results){
 			$obj = new stdClass();
 			$obj->data = new stdClass();
 			$obj->count = 0;
@@ -225,6 +226,15 @@
 				}
 			}
 			return $obj;
+		}
+
+		function getSkillIdById($ids){
+			$conditions = (is_array($ids)) ? (sprintf('WHERE skill_dimension.id IN ("%s") ', implode('", "', $ids))) : sprintf('WHERE skill_dimension.id = %s ', $names);
+
+			$query = sprintf('SELECT skill_dimension.name%s as name, skill_dimension.skill_tree_id as id, skill_dimension.required_skill_tree_points as required FROM skill_tree_skills as skill_dimension %s', $this->_getLocaleSuffix(), $conditions);
+
+			$skillIds = $this->_queryDb($query);
+			return $this->_prepareSkillIds($skillIds);
 		}
 
 		function getSkillDecorations($options){
