@@ -101,7 +101,38 @@
 		// var_dump($decorations); exit;
 		$results = false;
 		if(!empty($armorList)){
-			$results = $combine->gattai($options['weapon'], $armorList, $skillIds, $decorations);
+			$arrayMsg = array(
+				"Missing weapon slot param",
+				"Missing skill param",
+				"Missing decoration param",
+				"Missing charm param"
+			);
+      $isWeapon     = false;
+      $isSkill      = false;
+      $isDecoration = false;
+      $isCharm      = true;
+			if(isset($options['weapon'])){
+				$isWeapon = true;
+				unset($arrayMsg[0]);
+			}
+			if(isset($skillIds)){
+				$isSkill = true;
+				unset($arrayMsg[1]);
+			}
+			if(isset($decorations)){
+				$isDecoration = true;
+				unset($arrayMsg[2]);
+			}
+			if(isset($skillList)){
+				$isCharm = true;
+				unset($arrayMsg[3]);
+			}
+			if($isWeapon === true && $isSkill === true && $isDecoration === true && $isCharm === true){
+				$results = $combine->gattai($options['weapon'], $armorList, $skillIds, $decorations, '');
+			} else {
+				echo $myDispatch->_getAPIResponse(301, implode(', ', $arrayMsg));
+				return;
+			}
 		}
 		if($results){
 			echo $myDispatch->_getAPIResponse(100, $results);
@@ -111,7 +142,7 @@
 	});
 
 	//use for testing and debugging
-	$app->get('/invoke/:action(/)(/:options)', function ($action, $options = '') use($myDispatch, $combine){
+	$app->get('/invoke/:action/:options', function ($action, $options = '') use($myDispatch, $combine){
 		$armor_slots = array(
 			'head',
 			'body',
@@ -166,12 +197,52 @@
 		);
 		$decorations = $myDispatch->invokeCall('getSkillDecorations', $options);
 		$options['weapon'] = 2;
+		// charms section
+		$options['charms'] = array(
+			array(
+				'slots' => 2,
+				31 => 6,
+				18 => 2
+			),
+			array(
+				'slots' => 3,
+				31 => 4,
+				6 => 2
+			),
+			array(
+				'slots' => 3,
+				32 => 4,
+				64 => 2
+			)
+		);
+		$options['valid_charms'] = new stdClass();
+		$options['valid_charms']->data = new stdClass();
+		foreach($options['query_skills']->data as $id => $skill){
+			foreach($options['charms'] as $charmId => $charm){
+				if(array_key_exists($id, $charm)){
+					$charmObj = new stdClass();
+					$charmObj->skill_tree_dimension = new stdClass();
+					foreach($charm as $key => $value){
+						if(is_numeric($key)){
+							$charmObj->skill_tree_dimension->$key = new stdClass();
+							$charmObj->skill_tree_dimension->$key->skill_tree_id = $key;
+							$charmObj->skill_tree_dimension->$key->point_value = $value;
+						}
+					}
+					$options['valid_charms']->data->$charmId = $charmObj;
+					unset($options['charms'][$charmId]);
+				}
+			}
+		}
+		$charmList = json_encode($options['valid_charms']);
+		var_dump($charmList); die;
+		// charms section end
 		// var_dump($skillIds);
 		// var_dump($armors);
 		// var_dump($decorations); exit;
 		$results = false;
 		if(!empty($armorList)){
-			$results = $combine->gattai($options['weapon'], $armorList, $skillIds, $decorations);
+			$results = $combine->gattai($options['weapon'], $armorList, $skillIds, $decorations, $charmList);
 		}
 		if($results){
 			echo json_encode(str_replace("'", "\'", $results));

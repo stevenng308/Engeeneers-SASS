@@ -12,24 +12,25 @@
 			$this->weapon       = 0;
 		}
 
-		function gattai($weapon, $armors, $skillIds, $decorations){
-			$this->weapon = $weapon;
-			$skills       = json_decode($skillIds);
-			$decorations  = json_decode($decorations);
-			$headArmors   = json_decode($armors[0]);
-			$bodyArmors   = json_decode($armors[1]);
-			$gloveArmors  = json_decode($armors[2]);
-			$waistArmors  = json_decode($armors[3]);
-			$legArmors    = json_decode($armors[4]);
-			$foundArmors  = array();
+		function gattai($weapon, $armors, $skillIds, $decorations, $charms){
+      $this->weapon = $weapon;
+      $skills       = json_decode($skillIds);
+      $decorations  = json_decode($decorations);
+      $charms       = json_decode($charms);
+      $headArmors   = json_decode($armors[0]);
+      $bodyArmors   = json_decode($armors[1]);
+      $gloveArmors  = json_decode($armors[2]);
+      $waistArmors  = json_decode($armors[3]);
+      $legArmors    = json_decode($armors[4]);
+      $foundArmors  = array();
 			// echo $headArmors->count . " \n";
 			// echo $bodyArmors->count . " \n";
 			// echo $gloveArmors->count . " \n";
 			// echo $waistArmors->count . " \n";
 			// echo $legArmors->count . " \n"; exit;
 			// var_dump($skills->data);
-			$skill_map = array_keys(get_object_vars($skills->data));
-			$weights = array('3' => 0, '2' => 0, '1' => 0);
+      $skill_map    = array_keys(get_object_vars($skills->data));
+      $weights      = array('3' => 0, '2' => 0, '1' => 0);
 			foreach($skill_map as $skill){
 				foreach($decorations->data->$skill->slot_weights as $slot => $weight){
 					$weights[$slot] = 1;
@@ -45,9 +46,6 @@
 				foreach($bodyArmors->data as $body){
 					// var_dump(array_diff($this->_getArraySkillIdFromArmor($body), $totals['complete'])); exit;
 					if(array_diff($this->_getArraySkillIdFromArmor($body), $totals['complete'])){
-						if(isset($totals['point_value']['body'])){
-							$totals = $this->_cleanUpTotalsWrapper('body', $totals);
-						}
 						$totals = $this->_totalSkills($body, $totals, 'body');
 
 						foreach($gloveArmors->data as $glove){
@@ -131,6 +129,9 @@
 
 		private function _checkSkillTotals($skills, $results, $type){
 			switch($type){
+				case "charm":
+							return (count($skills) === count($results['complete'])) ? true : $results;
+							break;
 				case "glove":
 							return (count($skills) === count($results['complete'])) ? true : $results;
 							break;

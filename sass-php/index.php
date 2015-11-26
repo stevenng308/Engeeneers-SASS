@@ -43,13 +43,13 @@
 					    <span class="sr-only">Toggle Dropdown</span>
 					  </button>
 					  <ul class="dropdown-menu">
-					    <li><a class="hunter_type" href="#" data-value="blade">Blademaster</a></li>
+					    <li><a class="hunter_type default" href="#" data-value="blade">Blademaster</a></li>
 					    <li><a class="hunter_type" href="#" data-value="gunner">Gunner</a></li>
 					  </ul>
 					</div>
 					<!-- Split button -->
 					<div class="btn-group">
-					  <button id="armor_level_label" type="button" class="btn btn-primary filter_label">Armor Rarity</button>
+					  <button id="armor_rarity_label" type="button" class="btn btn-primary filter_label">Armor Rarity</button>
 					  <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
 					    <span class="caret"></span>
 					    <span class="sr-only">Toggle Dropdown</span>
@@ -57,7 +57,7 @@
 					  <ul class="dropdown-menu">
 					    <li><a class="armor_rarity" href="#" data-value="10">10<i class="fa fa-star" style="font-size: 0.97rem;"></i> Only</a></li>
 					    <li><a class="armor_rarity" href="#" data-value="9">9<i class="fa fa-star" style="font-size: 0.97rem;"></i> & Above</a></li>
-							<li><a class="armor_rarity" href="#" data-value="8">8<i class="fa fa-star" style="font-size: 0.97rem;"></i> & Above</a></li>
+							<li><a class="armor_rarity default" href="#" data-value="8">8<i class="fa fa-star" style="font-size: 0.97rem;"></i> & Above</a></li>
 							<li><a class="armor_rarity" href="#" data-value="7">7<i class="fa fa-star" style="font-size: 0.97rem;"></i> & Above</a></li>
 					  </ul>
 					</div>
@@ -70,7 +70,7 @@
 					  </button>
 					  <ul class="dropdown-menu">
 					    <li><a class="weapon" href="#" data-value="3">OOO</a></li>
-					    <li><a class="weapon" href="#" data-value="2">OO-</a></li>
+					    <li><a class="weapon default" href="#" data-value="2">OO-</a></li>
 							<li><a class="weapon" href="#" data-value="1">O--</a></li>
 							<li><a class="weapon" href="#" data-value="0">None</a></li>
 					  </ul>
@@ -95,7 +95,7 @@
 							<div id="search_results">
 								<div class="panel panel-primary">
 									<div class="panel-heading">
-										<h3 class="panel-title"> Result 1</h3>
+										<h3 class="panel-title">Result 0</h3>
 									</div>
 									<div class="panel-body">
 										<table class="table table-condensed">
@@ -115,8 +115,8 @@
 								</div>
 							</div>
 						</div>
-						<div class="progress" style="margin-top:2%;">
-						  <div class="progress-bar progress-bar-success progress-bar-striped active" role="progressbar" aria-valuenow="45" aria-valuemin="0" aria-valuemax="100" style="width: 45%;">
+						<div id="progress_bar" class="progress" style="margin-top:2%; display:none;">
+						  <div class="progress-bar progress-bar-success progress-bar-striped active" role="progressbar" aria-valuenow="45" aria-valuemin="0" aria-valuemax="100" style="width: 0%;">
 						    <span class="sr-only">45% Complete</span>
 						  </div>
 						</div>
@@ -155,6 +155,16 @@
 					</div>
 				</div>
 			</div>
+			<div id="extra_slots_template">
+				<table>
+					<thead>
+						<th>Extra Slots</th>
+						<th>Amount</th>
+					</thead>
+					<tbody class="extra_slot_list">
+					</tbody>
+				</table>
+			</div>
 		</div>
     <!-- jQuery first, then Bootstrap JS. -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
@@ -166,7 +176,7 @@
 			var skills = $.parseJSON('<?php echo str_replace("'", "\'", $skillIds); ?>');
 			$.each(skills.data, function(key, values){
 				skillNames.push(values.name);
-				skillIdLookup[values.name] = values.id;
+				skillIdLookup[values.name.toLowerCase()] = values.id;
 			});
 		</script>
 		<script src="assets/dist/js/sass.js"></script>
