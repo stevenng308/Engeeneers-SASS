@@ -3,6 +3,7 @@
 		private $slots         = null;
 		public $skillThreshold = 3;
 		public $resultLimit    = 100;
+		public $timeOffset     = 120; // in seconds. keep this below the max exec php time
 		function __construct(){
 			$this->slots        = new stdClass();
 			$this->slots->zero  = 0;
@@ -13,6 +14,8 @@
 		}
 
 		function gattai($weapon, $armors, $skillIds, $decorations, $charms){
+      $startTime    = microtime(true);
+      $endTime      = $startTime + $this->timeOffset;
       $this->weapon = $weapon;
       $skills       = json_decode($skillIds);
       $decorations  = json_decode($decorations);
@@ -59,7 +62,7 @@
 										if($found){
 											$foundArmors[] = $found;
 										}
-										if(count($foundArmors) >= $this->resultLimit){
+										if(count($foundArmors) >= $this->resultLimit || microtime(true) >= $endTime){
 											break 3;
 										}
 										$totals = $this->_cleanUpTotalsWrapper('body', $totals);
@@ -79,7 +82,7 @@
 												if($found){
 													$foundArmors[] = $found;
 												}
-												if(count($foundArmors) >= $this->resultLimit){
+												if(count($foundArmors) >= $this->resultLimit || microtime(true) >= $endTime){
 													break 4;
 												}
 												$totals = $this->_cleanUpTotalsWrapper('glove', $totals);
@@ -99,7 +102,7 @@
 														if($found){
 															$foundArmors[] = $found;
 														}
-														if(count($foundArmors) >= $this->resultLimit){
+														if(count($foundArmors) >= $this->resultLimit || microtime(true) >= $endTime){
 															break 5;
 														}
 														$totals = $this->_cleanUpTotalsWrapper('waist', $totals);
@@ -262,7 +265,7 @@
 			switch((int) $slot_value){
 				case 3:
 					$num_slots['alt'][2] += 1; //a 3 slot is equal to 1 2 slot and 1 1 slot
-					$num_slots['alt'][1] += 4; //sum from above + 3 1 slots
+					$num_slots['alt'][1] += 3; //sum from above + 3 1 slots
 					break;
 				case 2:
 					$num_slots['alt'][1] += 2;
@@ -271,7 +274,7 @@
 			return $num_slots;
 		}
 
-		private function _subAltSlots($num_slots, $slot_value, $isSub = false){
+		private function _subAltSlots($num_slots, $slot_value, $isSub = false, &$counter = 0){
 			if(array_sum($num_slots) > 0){
 				switch((int) $slot_value){
 					case 3:
@@ -279,20 +282,31 @@
 						$num_slots['alt'][1] -= 4;
 						break;
 					case 2:
-						$num_slots['alt'][2] -= 1; //using a sub 2 slot from a 3 slot potentially
-						$num_slots['alt'][1] -= 2; //which also means 2 1 slots are going to be gone also
-						if($isSub && $num_slots[3] > 0){
-							$num_slots[3] -= 1;
+						if($isSub){
+							$num_slots['alt'][2] -= 1; //using a sub 2 slot from a 3 slot potentially
+							if($num_slots[3] > 0 && $counter === 0){
+								$num_slots[3] -= 1;
+								$counter = 1; //extra slot left after using a 3 slot
+							}
+						} else {
+							$num_slots['alt'][1] -= 2; //which also means 2 1 slots are going to be gone also
 						}
 						break;
 					case 1:
 						if($isSub){
 							$num_slots['alt'][1] -= 1; //using a sub 1 slot from a 2 slot potentially
-							$num_slots['alt'][2] -= 1; //potential 2 slot is gone and only a 1 slot is left
-							if($num_slots[3] > 0){
+							if($num_slots[3] > 0 && $counter === 0){
 								$num_slots[3] -= 1;
-							} else if($num_slots[2] > 0){
+								$counter = 2; //extra slot left after using a 3 slot
+							} else if($num_slots[2] > 0 && $counter === 0){
 								$num_slots[2] -= 1;
+								$counter = 1;
+							} else {
+								if($counter === 2){
+									$num_slots['alt'][2] -= 1; //sub 2 slot that came from a 3 slot is going to not be available after the decrement
+									// var_dump($num_slots); die;
+								}
+								$counter--;
 							}
 						}
 						break;
@@ -304,6 +318,7 @@
 		private function _totalDecorations($found, $decorationsData, $skillData){
 			// var_dump($decorationsData);
 			// var_dump($found);
+			$counter = 0;
 			foreach($found['incomplete'] as $skill => $remaining){
 				$jewelIdx = 0;
 				$jewel = $decorationsData->$skill->$jewelIdx;
@@ -313,16 +328,13 @@
 					$isChanged = false;
 					$tmp_num_slots = $found['num_slots'];
 					if($found['num_slots'][$jewel->num_slots] > 0){
+						$found['num_slots'] = $this->_subAltSlots($found['num_slots'], $jewel->num_slots, false, $counter); //counter is passed by reference
 						$found['num_slots'][$jewel->num_slots] -= 1;
-						$found['num_slots'] = $this->_subAltSlots($found['num_slots'], $jewel->num_slots, false);
 					} else if(!empty($found['num_slots']['alt'][$jewel->num_slots])){
-						$found['num_slots'] = $this->_subAltSlots($found['num_slots'], $jewel->num_slots, true);
+						$found['num_slots'] = $this->_subAltSlots($found['num_slots'], $jewel->num_slots, true, $counter); //counter is passed by reference
 					} else if(!empty($decorationsData->$skill->{$jewelIdx + 1})){
 						$jewel = $decorationsData->$skill->{++$jewelIdx};
 					} else {
-						if($found['incomplete'][$skill] < 1){
-							//unset($found['incomplete'][$skill]);
-						}
 						break;
 					}
 					if($found['num_slots'] !== $tmp_num_slots){
@@ -334,9 +346,13 @@
 						$incomplete_val -= $jewel->point_value;
 						$found['decorations'][] = $jewel->name;
 					}
+					if($incomplete_val < 1){
+						unset($found['incomplete'][$skill]);
+						break;
+					}
 				}
 			}
-			if(isset($found['decorations'])){
+			if(isset($found['decorations']) && empty($found['incomplete'])){
 				$found['decorations'] = array_count_values($found['decorations']);
 				return $found;
 			} else {
@@ -367,7 +383,7 @@
 					$results['complete'][] = $id;
 				}
 			}
-			$results = $this->_checkSkillTotals($skills, $results, $type);
+			// $results = $this->_checkSkillTotals($skills, $results, $type);
 			return $results;
 		}
 	}

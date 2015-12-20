@@ -10,6 +10,7 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
+		<title>Engeeneers - SASS</title>
     <!-- Required meta tags always come first -->
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -26,7 +27,7 @@
     <nav class="navbar navbar-default navbar-static-top">
       <div class="container">
         <div class="navbar-header">
-          <h1>MH4U SASS - Monster Hunter 4 Ult. SUPER Armor Set Search</h1>
+          <h1>MH4U SASS - Monster Hunter 4 Ult. <span style="text-decoration: line-through;">SUPER</span><sub>perhaps</sub><sup>tm</sup>Armor Set Search</h1>
         </div>
       </div>
     </nav>
@@ -75,7 +76,7 @@
 							<li><a class="weapon" href="#" data-value="0">None</a></li>
 					  </ul>
 					</div>
-					<button class="btn btn-danger" style="margin-left: 5%;">Reset</button>
+					<button id="reset_form" class="btn btn-danger" style="margin-left: 5%;">Reset</button>
 					<div id="skill_selection" style="display: block; padding: 3% 0;">
 						<input class="typeahead" type="text" placeholder="Skill 1">
 						<input class="typeahead" type="text" placeholder="Skill 2">
